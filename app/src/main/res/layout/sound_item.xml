@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="100dp"
+    android:layout_height="140dp"
+    android:background="@color/gray">
+
+    <!-- The dimensions are based on some experimentation -->
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/imageViewItem"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/button"/>
+
+    <TextView
+        android:text="I'm a button"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:id="@+id/textViewItem"
+        android:layout_below="@+id/imageViewItem"
+        android:textSize="13sp"
+        android:textColor="@color/white"
+        android:gravity="center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:textAlignment="gravity"
+        android:textAllCaps="false"/>
+
+
+</RelativeLayout>

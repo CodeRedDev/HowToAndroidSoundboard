@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="germany.dev.codered.soundboardfavorites.SoundboardActivity"
+    android:id="@+id/activity_soundboard"
+    android:background="@color/gray">
+
+    <include
+        layout="@layout/toolbar"
+        android:id="@+id/soundboard_toolbar"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/soundboardRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/soundboard_toolbar"/>
+
+
+</RelativeLayout>
