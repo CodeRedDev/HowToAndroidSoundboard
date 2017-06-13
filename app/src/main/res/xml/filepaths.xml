@@ -1,0 +1,7 @@
+<paths>
+
+    <!-- Define the path were your data is contained -->
+    <!-- RECOMMENDED: Only edit the path tag -->
+
+    <external-path name="soundboard" path="my_soundboard/"/>
+</paths>

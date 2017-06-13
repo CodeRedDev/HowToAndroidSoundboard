@@ -7,8 +7,10 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -142,20 +144,40 @@ public class EventHandlerClass {
 
                         try{
 
-                            final Intent intent = new Intent(Intent.ACTION_SEND);
+                            // Check if the users device Android version is 5.1 or higher
+                            // If it is you'll have to use FileProvider to get the sharing function to work properly
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1){
 
-                            // Uri refers to a name or location
-                            // .parse() analyzes a given uri string and creates a Uri from it
+                                final String AUTHORITY = view.getContext().getPackageName() + ".fileprovider";
 
-                            // Define a "link" (Uri) to the saved file
-                            // ATTENTION: Check if the folder paths are equal
-                            // TODO: Modify the directory path (Check other TODOs in this class)
-                            Uri uri = Uri.parse(Environment.getExternalStorageDirectory().toString() + "/my_soundboard/" + fileName);
-                            intent.putExtra(Intent.EXTRA_STREAM, uri);
-                            // Define the intent to be of type audio
-                            intent.setType("audio/*");
-                            // Start a new chooser dialog where the user can choose an app to share the sound
-                            view.getContext().startActivity(Intent.createChooser(intent, "Share sound via..."));
+                                Uri contentUri = FileProvider.getUriForFile(view.getContext(), AUTHORITY, file);
+
+                                final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+
+                                final Intent intent = new Intent(Intent.ACTION_SEND);
+                                intent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                                // Define the intent to be of type audio/mp3
+                                intent.setType("audio/mp3");
+                                // Start a new chooser dialog where the user can choose an app to share the sound
+                                view.getContext().startActivity(Intent.createChooser(intent, "Share sound via..."));
+                            }
+                            else {
+                                final Intent intent = new Intent(Intent.ACTION_SEND);
+
+                                // Uri refers to a name or location
+                                // .parse() analyzes a given uri string and creates a Uri from it
+
+                                // Define a "link" (Uri) to the saved file
+                                // ATTENTION: Check if the folder paths are equal
+                                // TODO: Modify the directory path (Check other TODOs in this class)
+                                // TODO: When changing the path be sure to also modify the path in filepaths.xml (res/xml/filepaths.xml)
+                                Uri fileUri = Uri.parse(Environment.getExternalStorageDirectory().toString() + "/my_soundboard/" + fileName);
+                                intent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                                // Define the intent to be of type audio/mp3
+                                intent.setType("audio/mp3");
+                                // Start a new chooser dialog where the user can choose an app to share the sound
+                                view.getContext().startActivity(Intent.createChooser(intent, "Share sound via..."));
+                            }
 
                         } catch (Exception e){
 
