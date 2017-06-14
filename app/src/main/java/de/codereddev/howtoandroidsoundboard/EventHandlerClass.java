@@ -99,8 +99,7 @@ public class EventHandlerClass {
                     File storage = Environment.getExternalStorageDirectory();
                     // Define the directory path to the soundboard apps folder
                     // Change my_soundboard to whatever you want as your folder but keep the slash
-                    // ATTENTION: There are more hard coded references to this path. Be sure to edit them as well
-                    // TODO: Modify the directory path (Check other TODOs in this class)
+                    // TODO: When changing the path be sure to also modify the path in filepaths.xml (res/xml/filepaths.xml)
                     File directory = new File(storage.getAbsolutePath() + "/my_soundboard/");
                     // Creates the directory if it doesn't exist
                     // mkdirs() gives back a boolean. You can use it to do some processes as well but we don't really need it.
@@ -168,10 +167,7 @@ public class EventHandlerClass {
                                 // .parse() analyzes a given uri string and creates a Uri from it
 
                                 // Define a "link" (Uri) to the saved file
-                                // ATTENTION: Check if the folder paths are equal
-                                // TODO: Modify the directory path (Check other TODOs in this class)
-                                // TODO: When changing the path be sure to also modify the path in filepaths.xml (res/xml/filepaths.xml)
-                                Uri fileUri = Uri.parse(Environment.getExternalStorageDirectory().toString() + "/my_soundboard/" + fileName);
+                                Uri fileUri = Uri.parse(file.getAbsolutePath());
                                 intent.putExtra(Intent.EXTRA_STREAM, fileUri);
                                 // Define the intent to be of type audio/mp3
                                 intent.setType("audio/mp3");
