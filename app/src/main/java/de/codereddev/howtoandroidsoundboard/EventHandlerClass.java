@@ -195,20 +195,21 @@ public class EventHandlerClass {
                             public void onClick(DialogInterface dialog, int which){
 
                                 // Decide on the users choice which information will be send to a method that handles the settings for all kinds of system audio
-                                switch (which){
+                                switch (which) {
 
                                     // Ringtone
                                     case 0:
-                                        changeSystemAudio(view, fileName, file, 1);
+                                        changeSystemAudio(context, RingtoneManager.TYPE_RINGTONE, file);
                                         break;
                                     // Notification
                                     case 1:
-                                        changeSystemAudio(view, fileName, file, 2);
+                                        changeSystemAudio(context, RingtoneManager.TYPE_NOTIFICATION, file);
                                         break;
                                     // Alarmton
                                     case 2:
-                                        changeSystemAudio(view, fileName, file, 3);
+                                        changeSystemAudio(context, RingtoneManager.TYPE_ALARM, file);
                                         break;
+                                    default:
                                 }
                             }
                         });
@@ -219,13 +220,17 @@ public class EventHandlerClass {
                 }
 
                 // Add sound to favorites / Remove sound from favorites
-                if (item.getItemId() == R.id.action_favorite){
+                if (item.getItemId() == R.id.action_favorite) {
+
+                    DatabaseHandler databaseHandler = DatabaseHandler
+                            .getInstance(context.getApplicationContext());
 
                     // Identify the current activity
-                    if (view.getContext() instanceof FavoriteActivity)
-                        databaseHandler.removeFavorite(view.getContext(), soundObject);
-                    else
+                    if (context instanceof FavoriteActivity) {
+                        databaseHandler.removeFavorite(context, soundObject);
+                    } else {
                         databaseHandler.addFavorite(soundObject);
+                    }
                 }
 
                 return true;
@@ -235,73 +240,60 @@ public class EventHandlerClass {
         popup.show();
     }
 
-    // Save as system audio
-    private static void changeSystemAudio(View view, String fileName, File file, int action){
+    private static void changeSystemAudio(Context context, int type, File file) {
 
-        try{
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.DATA, file.getAbsolutePath());
+        values.put(MediaStore.MediaColumns.TITLE, file.getName());
+        values.put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp3");
+        values.put(MediaStore.Audio.Media.ARTIST, "HandOfBlood");
+        values.put(MediaStore.Audio.Media.IS_RINGTONE, true);
+        values.put(MediaStore.Audio.Media.IS_NOTIFICATION, true);
+        values.put(MediaStore.Audio.Media.IS_ALARM, true);
+        values.put(MediaStore.Audio.Media.IS_MUSIC, false);
+        values.put(MediaStore.Audio.Media.IS_PODCAST, false);
 
-            // Put all informations about the audio into ContentValues
-            ContentValues values = new ContentValues();
-
-            // DATA stores the path to the file on disk
-            values.put(MediaStore.MediaColumns.DATA, file.getAbsolutePath());
-            // TITLE stores... guess what? Right, the title. GENIUS
-            values.put(MediaStore.MediaColumns.TITLE, fileName);
-            // MIME_TYPE stores the type of the data send via the MediaProvider
-            values.put(MediaStore.MediaColumns.MIME_TYPE, "audio/*");
-
-            switch (action){
-
-                // Ringtone
-                case 1:
-                    values.put(MediaStore.Audio.Media.IS_RINGTONE, true);
-                    values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
-                    values.put(MediaStore.Audio.Media.IS_ALARM, false);
-                    break;
-                // Notification
-                case 2:
-                    values.put(MediaStore.Audio.Media.IS_RINGTONE, false);
-                    values.put(MediaStore.Audio.Media.IS_NOTIFICATION, true);
-                    values.put(MediaStore.Audio.Media.IS_ALARM, false);
-                    break;
-                // Alarm
-                case 3:
-                    values.put(MediaStore.Audio.Media.IS_RINGTONE, false);
-                    values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
-                    values.put(MediaStore.Audio.Media.IS_ALARM, true);
-                    break;
-            }
-
-            values.put(MediaStore.Audio.Media.IS_MUSIC, false);
-
-            // Define a link(Uri) to the saved file and modify this link a little bit
-            // DATA is set by ContenValues and therefore has to be replaced
-            Uri uri = MediaStore.Audio.Media.getContentUriForPath(file.getAbsolutePath());
-            view.getContext().getContentResolver().delete(uri, MediaStore.MediaColumns.DATA + "=\"" + file.getAbsolutePath() + "\"", null);
-            // Fill the Uri with all the information from ContentValues
-            Uri finalUri = view.getContext().getContentResolver().insert(uri, values);
-
-            // Finally set the audio as one of the system audio types
-            switch (action){
-
-                // Ringtone
-                case 1:
-                    RingtoneManager.setActualDefaultRingtoneUri(view.getContext(), RingtoneManager.TYPE_RINGTONE, finalUri);
-                    break;
-                // Notification
-                case 2:
-                    RingtoneManager.setActualDefaultRingtoneUri(view.getContext(), RingtoneManager.TYPE_NOTIFICATION, finalUri);
-                    break;
-                // Alarm
-                case 3:
-                    RingtoneManager.setActualDefaultRingtoneUri(view.getContext(), RingtoneManager.TYPE_ALARM, finalUri);
-                    break;
-            }
-
-        } catch (Exception e){
-
-            // Log error if process failed
-            Log.e(LOG_TAG, "Failed to save as system tone: " + e.getMessage());
+        final Uri baseUri = MediaStore.Audio.Media.getContentUriForPath(file.getAbsolutePath());
+        Uri toneUri = getUriForExistingTone(context, baseUri, file.getAbsolutePath());
+        if (toneUri == null) {
+            toneUri = context.getContentResolver().insert(baseUri, values);
         }
+        RingtoneManager.setActualDefaultRingtoneUri(context, type, toneUri);
+    }
+
+    /**
+     * Calculates a URI for an existing tone.
+     *
+     * @param context Context of the current activity.
+     * @param uri Base URI to the tone.
+     * @param filePath Path of the file that is linked to the tone.
+     * @return The URI of the existing tone or null if it does not exist.
+     */
+    private static Uri getUriForExistingTone(Context context, Uri uri, String filePath) {
+
+        Cursor cursor = null;
+        try {
+
+            cursor = context.getContentResolver()
+                    .query(uri,
+                            new String[] {MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA},
+                            MediaStore.MediaColumns.DATA + " = ?",
+                            new String[] {filePath},
+                            null, null);
+
+            if (cursor != null && cursor.getCount() != 0) {
+
+                cursor.moveToFirst();
+                int mediaPos = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
+                return Uri.parse(uri.toString() + "/" + mediaPos);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
     }
 }
